@@ -10,6 +10,33 @@ function ListagemProdutos() {
   // Começamos com um array vazio.
   const [products, setProducts] = useState([]);
 
+  const handleDelete = (productId) => {
+  // 1. Pede a confirmação do usuário
+  const isConfirmed = window.confirm('Tem certeza que deseja excluir este produto?');
+
+  // 2. Se o usuário não confirmar, a função para por aqui
+  if (!isConfirmed) {
+    return;
+  }
+
+  // 3. Se confirmado, envia a requisição DELETE para a API
+  axios.delete(`http://localhost:3001/produtos/${productId}`)
+    .then(response => {
+      // Callback de SUCESSO
+      console.log('Produto deletado com sucesso:', response);
+      alert('Produto excluído com sucesso!');
+
+      // 4. ATUALIZA A TELA: Remove o produto da lista no estado local
+      // O .filter() cria um NOVO array com todos os produtos,
+      // EXCETO aquele que tem o 'id' que acabamos de deletar.
+      setProducts(products.filter(product => product.id !== productId));
+    })
+    .catch(error => {
+      // Callback de ERRO
+      console.error('Erro ao deletar o produto:', error);
+      alert('Ocorreu um erro ao excluir o produto.');
+    });
+};
   // --- EFEITO (useEffect) ---
   // O useEffect com um array de dependências vazio `[]` executa a função
   // interna apenas UMA VEZ, quando o componente é montado na tela.
@@ -45,7 +72,10 @@ function ListagemProdutos() {
             <p className="product-description">{product.descricao}</p>
             <div className="product-actions">
               <button className="btn-edit">Editar</button>
-              <button className="btn-delete">Deletar</button>
+              <button className="btn-delete"
+  onClick={() => handleDelete(product.id)}
+>
+  Deletar</button>
             </div>
           </div>
         ))}
