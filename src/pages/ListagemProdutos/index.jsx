@@ -6,77 +6,80 @@ import './style.css'; // Importa nossos estilos
 import { Link } from 'react-router-dom';
 
 function ListagemProdutos() {
-  // --- ESTADO (useState) ---
-  // Criamos um estado para armazenar a lista de produtos que virá da API.
-  // Começamos com um array vazio.
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Guarda TODOS os produtos da API
+  const [filteredProducts, setFilteredProducts] = useState([]); // Guarda os produtos que serão exibidos
+  const [searchTerm, setSearchTerm] = useState(""); // Guarda o texto da busca
 
   const handleDelete = (productId) => {
-  // 1. Pede a confirmação do usuário
-  const isConfirmed = window.confirm('Tem certeza que deseja excluir este produto?');
+    const isConfirmed = window.confirm('Tem certeza que deseja excluir este produto?');
+    if (!isConfirmed) {
+      return;
+    }
+    axios.delete(`http://localhost:3001/produtos/${productId}`)
+      .then(response => {
+        console.log('Produto deletado com sucesso:', response);
+        alert('Produto excluído com sucesso!');
+        setAllProducts(allProducts.filter(product => product.id !== productId));
+      })
+      .catch(error => {
+        console.error('Erro ao deletar o produto:', error);
+        alert('Ocorreu um erro ao excluir o produto.');
+      });
+  };
 
-  // 2. Se o usuário não confirmar, a função para por aqui
-  if (!isConfirmed) {
-    return;
-  }
-
-  // 3. Se confirmado, envia a requisição DELETE para a API
-  axios.delete(`http://localhost:3001/produtos/${productId}`)
-    .then(response => {
-      // Callback de SUCESSO
-      console.log('Produto deletado com sucesso:', response);
-      alert('Produto excluído com sucesso!');
-
-      // 4. ATUALIZA A TELA: Remove o produto da lista no estado local
-      // O .filter() cria um NOVO array com todos os produtos,
-      // EXCETO aquele que tem o 'id' que acabamos de deletar.
-      setProducts(products.filter(product => product.id !== productId));
-    })
-    .catch(error => {
-      // Callback de ERRO
-      console.error('Erro ao deletar o produto:', error);
-      alert('Ocorreu um erro ao excluir o produto.');
-    });
-};
-  // --- EFEITO (useEffect) ---
-  // O useEffect com um array de dependências vazio `[]` executa a função
-  // interna apenas UMA VEZ, quando o componente é montado na tela.
+  // --- EFEITO #1: Buscar os dados da API (APENAS UMA VEZ) ---
   useEffect(() => {
-    // Função para buscar os dados na API
     const fetchProducts = () => {
       axios.get('http://localhost:3001/produtos')
         .then(response => {
-          // Se a busca for bem-sucedida, atualizamos o estado 'products' com os dados
-          setProducts(response.data);
+          setAllProducts(response.data);
+          // setFilteredProducts(response.data); // Não precisamos mais desta linha aqui
           console.log('Produtos carregados:', response.data);
         })
         .catch(error => {
-          // Se houver um erro, mostramos no console
           console.error('Erro ao buscar produtos:', error);
         });
     };
-
-    fetchProducts(); // Chamamos a função de busca
+    fetchProducts();
   }, []); // O array vazio garante que isso rode só uma vez
+
+  // --- EFEITO #2: Filtrar os produtos (RODA SEMPRE QUE A BUSCA OU A LISTA MUDAR) ---
+  // Este useEffect foi movido para fora do primeiro
+  useEffect(() => {
+    const results = allProducts.filter(product =>
+      product.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredProducts(results);
+  }, [searchTerm, allProducts]); // Depende do termo de busca e da lista completa
 
   // --- ESTRUTURA JSX ---
   return (
     <div className="list-container">
       <h1>Lista de Brindes</h1>
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Pesquisar por nome..."
+          className="search-input"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
       <div className="products-grid">
-        {/* Usamos o .map() para transformar cada item do array 'products' em um card JSX */}
-        {products.map(product => (
+        {filteredProducts.map(product => (
           <div className="product-card" key={product.id}>
             <img src={product.imagem} alt={product.nome} className="product-image" />
             <h2 className="product-name">{product.nome}</h2>
-            <p className="product-price">R$ {product.preco.toFixed(2)}</p>
+            <p className="product-price">R$ {parseFloat(product.preco).toFixed(2)}</p>
             <p className="product-description">{product.descricao}</p>
             <div className="product-actions">
               <Link to={`/editar/${product.id}`} className="btn-edit">Editar</Link>
-              <button className="btn-delete"
-  onClick={() => handleDelete(product.id)}
->
-  Deletar</button>
+              <button
+                className="btn-delete"
+                onClick={() => handleDelete(product.id)}
+              >
+                Deletar
+              </button>
             </div>
           </div>
         ))}
