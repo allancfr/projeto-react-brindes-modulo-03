@@ -7,6 +7,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 // 2. Importe AMBAS as páginas que criamos
 import ListagemProdutos from './pages/ListagemProdutos';
 import CadastroProduto from './pages/CadastroProduto';
+import EditarProduto from './pages/EditarProduto';
 
 // Importe um CSS para o App se quiser estilizar o menu
 import './App.css';
@@ -29,6 +30,7 @@ function App() {
 
         {/* Rota 2: Quando a URL for "/cadastrar", mostre a tela de cadastro */}
         <Route path="/cadastrar" element={<CadastroProduto />} />
+        <Route path="/editar/:id" element={<EditarProduto />} />
       </Routes>
     </div>
   );

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './style.css'; // Importa nossos estilos
+import { Link } from 'react-router-dom';
 
 function ListagemProdutos() {
   // --- ESTADO (useState) ---
@@ -71,7 +72,7 @@ function ListagemProdutos() {
             <p className="product-price">R$ {product.preco.toFixed(2)}</p>
             <p className="product-description">{product.descricao}</p>
             <div className="product-actions">
-              <button className="btn-edit">Editar</button>
+              <Link to={`/editar/${product.id}`} className="btn-edit">Editar</Link>
               <button className="btn-delete"
   onClick={() => handleDelete(product.id)}
 >
